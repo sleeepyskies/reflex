@@ -3,6 +3,7 @@
 #include <string_view>
 
 #include "Context.hpp"
+#include "Field.hpp"
 #include "StringHash.hpp"
 #include "traits.hpp"
 
@@ -10,28 +11,19 @@
 namespace reflex
 {
 
-/**
- * @brief Helper struct to create an alias between a StringHash and a type T.
- * @tparam T The type to create an alias for.
- * @remark Constructing a second Alias<T> will overwrite the previous alias.
- */
-template <typename T>
-struct Alias
-{
-    constexpr explicit Alias(const std::string_view a) { alias = StringHash{ a }; }
 
-    static inline StringHash alias;
-};
 
 template <typename T>
 struct TypeBuilder
 {
     explicit TypeBuilder(Context& ctx) : m_ctx(&ctx) { }
 
-    auto type(StringHash& alias) -> TypeBuilder&
+    auto type(StringHash& hash) -> TypeBuilder&
     {
-        m_ctx->ctx[alias] = TypeData{};
-        m_alias = &alias;
+        auto& ctx = m_ctx->ctx;
+        if (ctx.contains(hash)) { ctx[hash].setHash(hash); }
+        else { m_ctx->ctx[hash] = TypeInfo{}; }
+        m_alias = &hash;
         return *this;
     }
 
@@ -39,7 +31,8 @@ struct TypeBuilder
         requires MemberFieldPointer<Ptr>
     auto field(const std::string_view alias) -> TypeBuilder&
     {
-        m_ctx->ctx[*m_alias].fields[StringHash{alias}] = Field::makeMember(StringHash{alias}, Ptr);
+        auto& ctx = m_ctx->ctx;
+        ctx[*m_alias].insert_field(StringHash{alias}, Field::create_member(Ptr));
         return *this;
     }
 
@@ -47,7 +40,8 @@ struct TypeBuilder
         requires StaticFieldPointer<Ptr>
     auto field(const std::string_view alias) -> TypeBuilder&
     {
-        m_ctx->ctx[*m_alias].fields[StringHash{alias}] = Field::makeStatic(StringHash{alias}, Ptr);
+        auto& ctx = m_ctx->ctx;
+        ctx[*m_alias].insert_field(StringHash{alias}, Field::create_static(Ptr));
         return *this;
     }
 
@@ -73,33 +67,33 @@ struct Global
 template <typename T>
 auto capture(Context& ctx, const std::string_view alias) -> TypeBuilder<T>
 {
-    return TypeBuilder<T>(ctx).type(Alias<T>{ alias }.alias);
+    return TypeBuilder<T>(ctx).type(Alias<T>{ alias }.hash);
 }
 
 template <typename T>
 auto capture(const std::string_view alias) -> TypeBuilder<T>
 {
-    return TypeBuilder<T>(internal::Global::ctx).type(Alias<T>{ alias }.alias);
+    return TypeBuilder<T>(internal::Global::ctx).type(Alias<T>{ alias }.hash);
 }
 
 template <typename T>
-auto lookup() -> TypeData
+auto lookup() -> TypeInfo
 {
-    return internal::Global::ctx.ctx[Alias<T>::alias];
+    return internal::Global::ctx.ctx[Alias<T>::hash];
 }
 
 template <typename T>
-auto lookup(const Context& ctx) -> TypeData
+auto lookup(const Context& ctx) -> TypeInfo
 {
     return ctx.ctx[Alias<T>::alias];
 }
 
-inline auto lookup(const std::string_view name) -> TypeData
+inline auto lookup(const std::string_view name) -> TypeInfo
 {
     return internal::Global::ctx.ctx[StringHash{name}];
 }
 
-inline auto lookup(const Context& ctx, const std::string_view name) -> TypeData
+inline auto lookup(const Context& ctx, const std::string_view name) -> TypeInfo
 {
     return ctx.ctx.at(StringHash{name});
 }

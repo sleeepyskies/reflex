@@ -3,10 +3,11 @@
 #include "StringHash.hpp"
 #include "reflex.hpp"
 
-struct Person
+struct [[reflex]] [[serial]] Person
 {
     int age;
     int salary;
+    std::string name;
     static inline int averageLifespan = 80;
 };
 
@@ -19,25 +20,16 @@ int main() {
     reflex::capture<Person>("Person")
         .field<&Person::age>("age")
         .field<&Person::salary>("salary")
+        .field<&Person::name>("name")
         .field<&Person::averageLifespan>("averageLifespan");
 
-    const Person p{25, 50000};
+    const Person p1{25, 50000, "bill"};
+    Person p2{25, 50000, "bill"};
 
-    auto typeData = reflex::lookup<Person>();
-
-    std::cout << "{\n";
-    for (auto& [name, field] : typeData.fields) {
-        std::cout << "  \"" << std::string(name.getString()) << "\": ";
-        if (field.isStatic) {
-            const int* ptr = static_cast<const int*>(field.get(nullptr));
-            std::cout << *ptr;
-        } else {
-            const int* ptr = static_cast<const int*>(field.get((void*)&p));
-            std::cout << *ptr;
-        }
-        std::cout << ",\n";
-    }
-    std::cout << "}\n";
+    const auto field = reflex::lookup("Person").lookup_field("age");
+    auto& val1 = *static_cast<const int*>(field.get(p1));
+    auto& val2 = *static_cast<int*>(field.get(p2));
+    field.set(p2, "hfjk");
 
     return 0;
 }

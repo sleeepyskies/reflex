@@ -1,82 +1,38 @@
 #pragma once
 
-#include <functional>
 #include <unordered_map>
 #include "StringHash.hpp"
+#include "Field.hpp"
 
 
 namespace reflex
 {
 
-struct Field
+class TypeInfo
 {
-    StringHash alias;
-    bool isStatic = false;
-    bool isConst  = false;
+public:
+    TypeInfo() = default;
 
-    std::function<void*(void*)> get;
-    std::function<void(void*, const void*)> set;
+    void setHash(const StringHash& hash) { m_hash = hash; }
 
-    template <typename Class, typename T>
-    static Field makeMember(const StringHash& name, T Class::* memberPtr)
-    {
-        Field f;
-        f.alias    = name;
-        f.isStatic = false;
-        f.isConst  = std::is_const_v<T>;
+    auto getHash() const -> StringHash { return m_hash; }
 
-        f.get = [memberPtr] (void* obj) -> void* {
-            return &(static_cast<Class*>(obj)->*memberPtr);
-        };
+    auto name() const -> std::string_view { return m_hash.getString(); }
 
-        if constexpr (!std::is_const_v<T>) {
-            f.set = [memberPtr] (void* obj, const void* value) {
-                static_cast<Class*>(obj)->*memberPtr = *static_cast<const T*>(value);
-            };
-        } else {
-            f.set = [] (void*, const void*) {
-                throw std::runtime_error("Cannot set const field");
-            };
-        }
+    void insert_field(const StringHash& hash, const Field& field) { m_fields.insert_or_assign(hash, field); }
 
-        return f;
-    }
+    auto lookup_field(const std::string_view name) -> Field& { return m_fields.at(StringHash{name}); }
 
-    template <typename T>
-    static Field makeStatic(const StringHash& name, T* staticPtr)
-    {
-        Field f;
-        f.alias    = name;
-        f.isStatic = true;
-        f.isConst  = std::is_const_v<T>;
+    auto fields() const -> const std::unordered_map<StringHash, Field>& { return m_fields; }
 
-        f.get = [staticPtr] (void*) -> void* {
-            return const_cast<T*>(staticPtr);
-        };
-
-        if constexpr (!std::is_const_v<T>) {
-            f.set = [staticPtr] (void*, const void* value) {
-                *staticPtr = *static_cast<const T*>(value);
-            };
-        } else {
-            f.set = [] (void*, const void*) {
-                throw std::runtime_error("Cannot set const static field");
-            };
-        }
-
-        return f;
-    }
-
-};
-
-struct TypeData
-{
-    std::unordered_map<StringHash, Field> fields;
+private:
+    StringHash m_hash;
+    std::unordered_map<StringHash, Field> m_fields;
 };
 
 struct Context
 {
-    std::unordered_map<StringHash, TypeData> ctx{ };
+    std::unordered_map<StringHash, TypeInfo> ctx{ };
 };
 
 } // namespace reflex

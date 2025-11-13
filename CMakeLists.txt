@@ -9,4 +9,6 @@ add_executable(reflex
         src/StringHash.hpp
         src/Context.hpp
         src/traits.hpp
+        src/Field.hpp
+        src/Alias.hpp
 )
