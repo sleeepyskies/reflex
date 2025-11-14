@@ -9,12 +9,15 @@ namespace reflex
 /**
  * @brief Represents a general reflection error.
  */
-class reflection_error : std::exception
+class reflection_error : public std::exception
 {
 public:
-    reflection_error() = default;
+    explicit reflection_error(const char* message = "Reflection error.") noexcept : msg(message) { }
 
-    [[nodiscard]] auto what() const noexcept -> const char* override { return "Reflection error."; }
+    [[nodiscard]] auto what() const noexcept -> const char* override { return msg; }
+
+private:
+    const char* msg;
 };
 
 /**
@@ -23,9 +26,7 @@ public:
 class const_field_error final : reflection_error
 {
 public:
-    const_field_error() = default;
-
-    [[nodiscard]] auto what() const noexcept -> const char* override { return "Cannot set a const field."; }
+    const_field_error() : reflection_error("Cannot set a const field.") { }
 };
 
 } // namespace reflex

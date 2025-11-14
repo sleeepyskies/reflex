@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <any>
 
-#include "alias.hpp"
+#include "hash.hpp"
 #include "exception.hpp"
 
 
@@ -21,13 +21,13 @@ public:
      * @brief Returns the string_hash of this field.
      * @return The string_hash of this field.
      */
-    [[nodiscard]] auto hash() const noexcept -> string_hash { return m_hash; }
+    [[nodiscard]] auto hash() const noexcept -> name_hash { return m_field_name_hash; }
 
     /**
      * @brief Returns the name of the field.
      * @return The name of the field.
      */
-    [[nodiscard]] auto name() const noexcept -> std::string_view { return m_hash.name(); }
+    [[nodiscard]] auto name() const noexcept -> std::string_view { return m_field_name_hash.name(); }
 
     /**
      * @brief Checks whether this field is static.
@@ -49,16 +49,7 @@ public:
      * @remark @code int& value = *static_cast<int*>(field.get()); @endcode
      */
     template <typename Class>
-    [[nodiscard]] auto get(Class& obj) const noexcept -> std::any
-    {
-        return m_get(static_cast<void*>(&obj));
-    }
-
-    template <typename T, typename Class>
-    [[nodiscard]] auto get(Class& obj) const noexcept -> T
-    {
-        return std::any_cast<T>(m_get(static_cast<void*>(&obj)));
-    }
+    [[nodiscard]] auto get(Class& obj) const -> std::any { return m_get(static_cast<void*>(&obj)); }
 
     /**
      * @brief Sets this fields value.
@@ -66,13 +57,11 @@ public:
      * @tparam T The type of the field.
      * @param obj The object to set the field for.
      * @param value The value to set the field to.
+     * @throw const_field_error if trying to set a const field.
      * @warning The caller must make sure that T matches the fields actual type.
      */
     template <typename Class, typename T>
-    void set(Class& obj, const T& value) const noexcept
-    {
-        m_set(static_cast<void*>(&obj), static_cast<const void*>(&value));
-    }
+    void set(Class& obj, const T& value) const { m_set(static_cast<void*>(&obj), static_cast<const void*>(&value)); }
 
     /**
      * @brief Constructs a new member field object.
@@ -83,12 +72,12 @@ public:
      * @return A new field instance for a member field.
      */
     template <typename Class, typename T>
-    static auto create_member(const string_hash& hash, T Class::* memberPtr) -> field
+    static auto create_member(const name_hash& hash, T Class::* memberPtr) noexcept -> field
     {
         field f;
-        f.m_hash      = hash;
-        f.m_is_static = false;
-        f.m_is_const  = std::is_const_v<T>;
+        f.m_field_name_hash = hash;
+        f.m_is_static       = false;
+        f.m_is_const        = std::is_const_v<T>;
 
         f.m_get = [memberPtr] (void* obj) -> std::any {
             auto* c = static_cast<Class*>(obj);
@@ -116,12 +105,12 @@ public:
      * @return A new field instance for a static field.
      */
     template <typename T>
-    static auto create_static(const string_hash& hash, T* staticPtr) -> field
+    static auto create_static(const name_hash& hash, T* staticPtr) noexcept -> field
     {
         field f;
-        f.m_hash      = hash;
-        f.m_is_static = true;
-        f.m_is_const  = std::is_const_v<T>;
+        f.m_field_name_hash = hash;
+        f.m_is_static       = true;
+        f.m_is_const        = std::is_const_v<T>;
 
         f.m_get = [staticPtr] (void*) -> std::any {
             return staticPtr;
@@ -141,8 +130,8 @@ public:
     }
 
 private:
-    /// @brief The string_hash of the field.
-    string_hash m_hash;
+    /// @brief The string_hash of the field name.
+    name_hash m_field_name_hash;
 
     /// @brief Whether the field is static.
     bool m_is_static = false;

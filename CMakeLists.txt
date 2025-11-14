@@ -9,8 +9,7 @@ project(
 )
 include(GNUInstallDirs)
 
-add_library(reflex INTERFACE
-        src/exception.hpp)
+add_library(reflex INTERFACE)
 
 target_include_directories(
         reflex
@@ -29,11 +28,12 @@ if(REFLEX_INCLUDE_HEADERS)
 
             src/reflex.hpp
 
-            src/alias.hpp
+            src/context.hpp
+            src/exception.hpp
             src/field.hpp
+            src/hash.hpp
             src/reflector.hpp
             src/serialize.hpp
-            src/string_hash.hpp
             src/traits.hpp
             src/type_info.hpp
     )

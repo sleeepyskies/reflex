@@ -1,8 +1,4 @@
 #pragma once
 
-namespace reflex
-{
-
-
-
-} // namespace reflex
+// todo
+namespace reflex { } // namespace reflex

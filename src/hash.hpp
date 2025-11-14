@@ -7,70 +7,74 @@
 namespace reflex
 {
 
+namespace internal
+{
+
 /**
  * @brief A class representing a hashed string.
  */
-class string_hash final
+template <typename Derived>
+class hash_base
 {
 public:
     /**
      * @brief Constructs a new string_hash given a std::string_view.
      * @param string The string to hash.
      */
-    constexpr explicit string_hash(const std::string_view string) : m_hash(fnv1a(string)), m_name(string) { }
+    constexpr explicit hash_base(const std::string_view string) : m_hash(fnv1a(string)), m_name(string) { }
 
     /**
      * @brief Constructs a default string_hash.
      */
-    constexpr string_hash() : m_hash(0) { }
+    constexpr hash_base() : m_hash(0) { }
 
     /**
      * @brief Compares two string_hash items for equality.
      * @param other The other string_hash to compare.
      * @return true if both hashes are equal, false otherwise.
      */
-    constexpr bool operator==(const string_hash& other) const noexcept { return m_hash == other.m_hash; }
+    constexpr bool operator==(const hash_base& other) const noexcept { return m_hash == other.m_hash; }
 
     /**
      * @brief Compares two string_hash items for inequality.
      * @param other The other string_hash to compare.
      * @return true if both hashes are inequal, false otherwise.
      */
-    constexpr bool operator!=(const string_hash& other) const noexcept { return m_hash != other.m_hash; }
+    constexpr bool operator!=(const hash_base& other) const noexcept { return m_hash != other.m_hash; }
 
     /**
      * @brief Compares if this hash is LE to another hash.
      * @param other The other string_hash to compare.
      * @return true if this hash is LE other.hash.
      */
-    constexpr bool operator<=(const string_hash& other) const noexcept { return m_hash <= other.m_hash; }
+    constexpr bool operator<=(const hash_base& other) const noexcept { return m_hash <= other.m_hash; }
 
     /**
      * @brief Compares if this hash is GE to another hash.
      * @param other The other string_hash to compare.
      * @return true if this hash is GE other.hash.
      */
-    constexpr bool operator>=(const string_hash& other) const noexcept { return m_hash >= other.m_hash; }
+    constexpr bool operator>=(const hash_base& other) const noexcept { return m_hash >= other.m_hash; }
 
     /**
      * @brief Compares if this hash is GT to another hash.
      * @param other The other string_hash to compare.
      * @return true if this hash is GT other.hash.
      */
-    constexpr bool operator<(const string_hash& other) const noexcept { return m_hash < other.m_hash; }
+    constexpr bool operator<(const hash_base& other) const noexcept { return m_hash < other.m_hash; }
 
     /**
      * @brief Compares if this hash is LT to another hash.
      * @param other The other string_hash to compare.
      * @return true if this hash is LT other.hash.
      */
-    constexpr bool operator>(const string_hash& other) const noexcept { return m_hash > other.m_hash; }
+    constexpr bool operator>(const hash_base& other) const noexcept { return m_hash > other.m_hash; }
 
     /**
      * @brief Returns the computed 64-bit hash.
      * @return The hash value.
      */
-    [[nodiscard]] auto hash() const noexcept -> uint64_t { return m_hash; }
+    [[nodiscard]] auto value() const noexcept -> uint64_t { return m_hash; }
 
     /**
      * @brief Returns the original string used to construct this hash.
@@ -104,12 +108,47 @@ private:
     }
 };
 
+} // namespace internal
+
+/**
+ * @brief A simple wrapper around hash_base used for a type_hash.
+ *
+ * This struct is not strictly required, but avoids confusion since types and
+ * member names are both identified via a string_hash. This struct serves to
+ * create a clearer distinction between the cases.
+ */
+struct type_hash : internal::hash_base<type_hash>
+{
+    using hash_base::hash_base;
+};
+
+/**
+ * @brief A simple wrapper for strig_hash.
+ *
+ * This struct is not strictly required, but avoids confusion since types and
+ * member names are both identified via a string_hash. This struct serves to
+ * create a clearer distinction between the cases.
+ */
+struct name_hash : internal::hash_base<type_hash>
+{
+    using hash_base::hash_base;
+};
+
 } // namespace reflex
 
 // todo: should create my own hashmap implementation, which would avoid needing this
 
+namespace std {
 template <>
-struct std::hash<reflex::string_hash>
-{
-    size_t operator()(const reflex::string_hash& s) const noexcept { return s.hash(); }
+struct hash<reflex::type_hash> {
+    size_t operator()(const reflex::type_hash& s) const noexcept {
+        return s.value();
+    }
 };
+template <>
+struct hash<reflex::name_hash> {
+    size_t operator()(const reflex::name_hash& s) const noexcept {
+        return s.value();
+    }
+};
+}
