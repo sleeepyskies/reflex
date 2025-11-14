@@ -3,7 +3,7 @@
 #include <functional>
 #include <stdexcept>
 
-#include "Alias.hpp"
+#include "alias.hpp"
 
 
 namespace reflex
@@ -12,7 +12,7 @@ namespace reflex
 /**
  * @brief A representation of an object field.
  */
-class Field
+class field
 {
 public:
     /**
@@ -32,7 +32,7 @@ public:
      * @tparam Class The class the field belongs to.
      * @param obj The object to set the field for.
      * @return A const void* or void* to the value of the field.
-     * @remark The result can be cast like: `auto& value = *static_cast<int*>(field.get());`
+     * @remark @code auto& value = *static_cast<int*>(field.get()); @endcode
      */
     template <typename Class>
     [[nodiscard]] auto get(Class& obj) const noexcept -> auto*
@@ -51,6 +51,7 @@ public:
      * @tparam T The type of the field.
      * @param obj The object to set the field for.
      * @param value The value to set the field to.
+     * @warning The caller must make sure that T matches the fields actual type.
      */
     template <typename Class, typename T>
     void set(Class& obj, const T& value) const noexcept
@@ -66,9 +67,9 @@ public:
      * @return A new Field instance for a member field.
      */
     template <typename Class, typename T>
-    static auto create_member(T Class::* memberPtr) -> Field
+    static auto create_member(T Class::* memberPtr) -> field
     {
-        Field f;
+        field f;
         f.m_is_static = false;
         f.m_is_const  = std::is_const_v<T>;
 
@@ -96,9 +97,9 @@ public:
      * @return A new Field instance for a static field.
      */
     template <typename T>
-    static auto create_static(T* staticPtr) -> Field
+    static auto create_static(T* staticPtr) -> field
     {
-        Field f;
+        field f;
         f.m_is_static = true;
         f.m_is_const  = std::is_const_v<T>;
 
