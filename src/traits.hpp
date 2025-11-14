@@ -8,21 +8,19 @@ namespace reflex
 
 /// @brief A member field pointer.
 template <auto Ptr>
-concept MemberFieldPointer = std::is_member_object_pointer_v<decltype(Ptr)>;
+concept member_field_ptr = std::is_member_object_pointer_v<decltype(Ptr)>;
 
 /// @brief A static field pointer.
 template <auto Ptr>
-concept StaticFieldPointer =
+concept static_field_ptr =
         std::is_pointer_v<decltype(Ptr)> &&
         !std::is_member_object_pointer_v<decltype(Ptr)> &&
         !std::is_member_function_pointer_v<decltype(Ptr)> &&
         !std::is_function_v<std::remove_pointer_t<decltype(Ptr)>>;
 
-/// @brief A general field pointer. Maybe be static field or a member field.
+/// @brief A general field pointer. It may be a static field or a member field.
 template <auto Ptr>
-concept FieldPointer = MemberFieldPointer<Ptr> || StaticFieldPointer<Ptr>;
-
-
+concept field_ptr = member_field_ptr<Ptr> || static_field_ptr<Ptr>;
 
 
 } // namespace reflex

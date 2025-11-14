@@ -29,7 +29,7 @@ struct global
 
 
 /**
- * @brief Builds and registers type metadata. Used for constructing TypeInfo.
+ * @brief Builds and registers type metadata. Used for constructing type_info.
  * @tparam T The reflected type.
  */
 template <typename T>
@@ -38,49 +38,42 @@ struct reflector
     /**
      * @brief Creates a Reflector bound to a context.
      * @param ctx Reflection context.
+     * @param hash The string_hash to associate with T
      */
-    explicit reflector(context& ctx) : m_ctx(&ctx) { }
-
-    /**
-     * @brief Captures a type entry.
-     * @param hash The StringHash of the type.
-     * @return A reference to the Reflector for use in a builder pattern.
-     */
-    auto type(string_hash& hash) -> reflector&
+    explicit reflector(context& ctx, const string_hash& hash) : m_ctx(&ctx), m_type_hash(hash)
     {
-        auto& ctx = *m_ctx;
-        if (ctx.contains(hash)) { ctx[hash].setHash(hash); } else { ctx[hash] = type_info{ }; }
-        m_hash = &hash;
-        return *this;
+        m_ctx->try_emplace(m_type_hash, type_info{m_type_hash});
     }
 
     /**
      * @brief Captures a member field entry.
      * @tparam Ptr The member pointer of the field.
-     * @param name The name of the field.
-     * @return A reference to the Reflector for use in a builder pattern.
+     * @param field_name The name of the field.
+     * @return A reference to the reflector for use in a builder pattern.
      */
     template <auto Ptr>
-        requires MemberFieldPointer<Ptr>
-    auto field(const std::string_view name) -> reflector&
+        requires member_field_ptr<Ptr>
+    auto field(const std::string_view field_name) -> reflector&
     {
         auto& ctx = *m_ctx;
-        ctx[*m_hash].insert_field(string_hash{ name }, field::create_member(Ptr));
+        const string_hash field_hash{field_name};
+        ctx.at(m_type_hash).insert_field(field_hash, field::create_member(field_hash, Ptr));
         return *this;
     }
 
     /**
      * @brief Captures a static field entry.
      * @tparam Ptr The static pointer to the field.
-     * @param name The name of the field.
+     * @param field_name The name of the field.
      * @return A reference to the Reflector for use in a builder pattern.
      */
     template <auto Ptr>
-        requires StaticFieldPointer<Ptr>
-    auto field(const std::string_view name) -> reflector&
+        requires static_field_ptr<Ptr>
+    auto field(const std::string_view field_name) -> reflector&
     {
         auto& ctx = *m_ctx;
-        ctx[*m_hash].insert_field(string_hash{ name }, field::create_static(Ptr));
+        const string_hash field_hash{field_name};
+        ctx.at(m_type_hash).insert_field(field_hash, field::create_static(field_hash, Ptr));
         return *this;
     }
 
@@ -88,7 +81,7 @@ private:
     /// @brief The context to capture into.
     context* m_ctx;
     /// @brief The StringHash of the type being captured.
-    string_hash* m_hash = nullptr;
+    const string_hash m_type_hash;
 };
 
 
@@ -96,25 +89,25 @@ private:
  * @brief Begins capturing a new type. Returns a reflector to be used in a builder pattern.
  * @tparam T The type to capture.
  * @param ctx The context to capture into.
- * @param name The name to associate with T.
+ * @param type_name The name to associate with T.
  * @return An instance of a reflector, used to sequentially capture a new type.
  */
 template <typename T>
-auto capture(context& ctx, const std::string_view name) -> reflector<T>
+auto capture(context& ctx, const std::string_view type_name) -> reflector<T>
 {
-    return reflector<T>(ctx).type(alias<T>{ name }.hash);
+    return reflector<T>(ctx, alias<T>{ type_name }.hash);
 }
 
 /**
  * @brief Begins capturing a new type in a local context. Returns a reflector to be used in a builder pattern.
  * @tparam T The type to capture.
- * @param name The name to associate with T.
+ * @param type_name The name to associate with T.
  * @return An instance of a reflector, used to sequentially capture a new type.
  */
 template <typename T>
-auto capture(const std::string_view name) -> reflector<T>
+auto capture(const std::string_view type_name) -> reflector<T>
 {
-    return reflector<T>(internal::global::ctx).type(alias<T>{ name }.hash);
+    return reflector<T>(internal::global::ctx, alias<T>{ type_name }.hash);
 }
 
 /**
@@ -145,9 +138,9 @@ auto lookup(const context& ctx) -> type_info
  * @param name The name to lookup.
  * @return The type_info associated with the name.
  */
-inline auto lookup(const std::string_view name) -> type_info
+inline auto lookup(const std::string_view name) -> const type_info&
 {
-    return internal::global::ctx[string_hash{ name }];
+    return internal::global::ctx.at(string_hash{ name });
 }
 
 /**
@@ -156,7 +149,7 @@ inline auto lookup(const std::string_view name) -> type_info
  * @param name The name to lookup.
  * @return The type_info associated with the name.
  */
-inline auto lookup(const context& ctx, const std::string_view name) -> type_info
+inline auto lookup(const context& ctx, const std::string_view name) -> const type_info&
 {
     return ctx.at(string_hash{ name });
 }
