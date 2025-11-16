@@ -41,8 +41,8 @@ public:
     auto field(const std::string_view field_name) noexcept -> reflector&
     {
         auto& ctx = *m_ctx;
-        const name_hash field_hash{ field_name };
-        ctx.at(m_type_hash).insert_field(field_hash, field::create_member(field_hash, Ptr));
+        const name_hash name_hash{ field_name };
+        ctx.at(m_type_hash).insert_field(name_hash, field::create_member(name_hash, m_type_hash, Ptr));
         return *this;
     }
 
@@ -57,8 +57,8 @@ public:
     auto field(const std::string_view field_name) noexcept -> reflector&
     {
         auto& ctx = *m_ctx;
-        const name_hash field_hash{ field_name };
-        ctx.at(m_type_hash).insert_field(field_hash, field::create_static(field_hash, Ptr));
+        const name_hash name_hash{ field_name };
+        ctx.at(m_type_hash).insert_field(name_hash, field::create_static(name_hash, m_type_hash, Ptr));
         return *this;
     }
 

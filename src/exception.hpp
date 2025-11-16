@@ -23,7 +23,7 @@ private:
 /**
  * @brief Represents an error when attempting to set a const object field.
  */
-class const_field_error final : reflection_error
+class const_field_error final : public reflection_error
 {
 public:
     const_field_error() : reflection_error("Cannot set a const field.") { }

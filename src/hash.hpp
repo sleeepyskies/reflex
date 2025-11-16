@@ -7,6 +7,9 @@
 namespace reflex
 {
 
+// todo:
+//  - idk if we need name_hash and type_hash, its kinda arbitrary? but we do have 2 different "kinds" of using a string_hash
+
 namespace internal
 {
 
@@ -74,13 +77,13 @@ public:
      * @brief Returns the computed 64-bit hash.
      * @return The hash value.
      */
-    [[nodiscard]] auto value() const noexcept -> uint64_t { return m_hash; }
+    [[nodiscard]] constexpr auto value() const noexcept -> uint64_t { return m_hash; }
 
     /**
      * @brief Returns the original string used to construct this hash.
      * @return The original string.
      */
-    [[nodiscard]] auto name() const noexcept -> std::string_view { return m_name; }
+    [[nodiscard]] constexpr auto name() const noexcept -> std::string_view { return m_name; }
 
 private:
     /// @brief The computed hash.
@@ -129,7 +132,7 @@ struct type_hash : internal::hash_base<type_hash>
  * member names are both identified via a string_hash. This struct serves to
  * create a clearer distinction between the cases.
  */
-struct name_hash : internal::hash_base<type_hash>
+struct name_hash : internal::hash_base<name_hash>
 {
     using hash_base::hash_base;
 };

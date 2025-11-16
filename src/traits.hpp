@@ -22,5 +22,8 @@ concept static_field_ptr =
 template <auto Ptr>
 concept field_ptr = member_field_ptr<Ptr> || static_field_ptr<Ptr>;
 
+/// @brief Helper type alias template to strip volatile/const/&/* from types.
+template <typename T>
+using stripped_type = std::remove_cvref_t<std::remove_pointer_t<T>>;
 
 } // namespace reflex

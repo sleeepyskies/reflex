@@ -17,6 +17,23 @@
 namespace reflex
 {
 
+namespace internal
+{
+
+template <typename T>
+struct alias
+{
+    explicit alias(const std::string_view str) { hash = type_hash{ str }; }
+
+    /// @brief A per-type cached hash value. Constructing an alias with a
+    /// string will initialize the static hash for that type so later lookups
+    /// can reference it without supplying the name again.
+    static inline type_hash hash;
+};
+
+} // namespace internal
+
+
 /**
  * @brief Begins capturing a new type. Returns a reflector to be used in a builder pattern.
  * @tparam T The type to capture.
@@ -27,7 +44,7 @@ namespace reflex
 template <typename T>
 auto capture(context& ctx, const std::string_view type_name) -> reflector<T>
 {
-    return reflector<T>(ctx, alias<T>{ type_name }.hash);
+    return reflector<T>(ctx, internal::alias<T>{ type_name }.hash);
 }
 
 /**
@@ -39,7 +56,7 @@ auto capture(context& ctx, const std::string_view type_name) -> reflector<T>
 template <typename T>
 auto capture(const std::string_view type_name) -> reflector<T>
 {
-    return reflector<T>(internal::global::ctx, alias<T>{ type_name }.hash);
+    return reflector<T>(internal::global::ctx, internal::alias<T>{ type_name }.hash);
 }
 
 /**
@@ -50,7 +67,7 @@ auto capture(const std::string_view type_name) -> reflector<T>
 template <typename T>
 auto lookup() -> type_info
 {
-    return internal::global::ctx[alias<T>::hash];
+    return internal::global::ctx[internal::alias<T>::hash];
 }
 
 /**
@@ -62,7 +79,7 @@ auto lookup() -> type_info
 template <typename T>
 auto lookup(const context& ctx) -> type_info
 {
-    return ctx[alias<T>::alias];
+    return ctx[internal::alias<T>::hash];
 }
 
 /**
@@ -72,7 +89,7 @@ auto lookup(const context& ctx) -> type_info
  */
 inline auto lookup(const std::string_view name) -> const type_info&
 {
-    return internal::global::ctx.at(hash_base{ name });
+    return internal::global::ctx.at(type_hash{ name });
 }
 
 /**
@@ -83,7 +100,7 @@ inline auto lookup(const std::string_view name) -> const type_info&
  */
 inline auto lookup(const context& ctx, const std::string_view name) -> const type_info&
 {
-    return ctx.at(hash_base{ name });
+    return ctx.at(type_hash{ name });
 }
 
 } // namespace reflex

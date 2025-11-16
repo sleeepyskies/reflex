@@ -15,7 +15,7 @@ namespace reflex
 class type_info
 {
 public:
-    explicit type_info(const type_hash& hash) noexcept : m_hash(hash) {}
+    explicit type_info(const type_hash& hash) noexcept : m_hash(hash) { }
 
     /**
      * @brief Sets the hash value of this TypeInfo.
@@ -40,7 +40,10 @@ public:
      * @param field_hash The name of the field to insert.
      * @param field The field to insert.
      */
-    void insert_field(const name_hash& field_hash, const field& field) noexcept { m_fields.insert_or_assign(field_hash, field); }
+    void insert_field(const name_hash& field_hash, const field& field) noexcept
+    {
+        m_fields.insert_or_assign(field_hash, field);
+    }
 
     /**
      * @brief Finds and returns the field associated with the given field name.
@@ -50,9 +53,9 @@ public:
      */
     [[nodiscard]] auto lookup_field(const std::string_view field_name) -> field&
     {
-        const name_hash hash{field_name};
+        const name_hash hash{ field_name };
         const auto it = m_fields.find(hash);
-        if (it == m_fields.end()) { throw reflection_error{"Field has not been captured."}; }
+        if (it == m_fields.end()) { throw reflection_error{ "Field has not been captured." }; }
         return it->second;
     }
 
@@ -61,6 +64,19 @@ public:
      * @return A view into the fields of this type.
      */
     [[nodiscard]] auto fields() const noexcept -> auto { return std::views::values(m_fields); }
+
+    /**
+     * @brief Returns a view into the fields of this type.
+     * @return A view into the fields of this type.
+     */
+    [[nodiscard]] auto fields() noexcept -> auto { return std::views::values(m_fields); }
+
+    /**
+     * @brief Applies a function to each captured field of this type.
+     * @param fn The function to apply to each field.
+     * @todo not done
+     */
+    void for_each_field(const std::function<void(field&)>& fn) { for (auto& field : fields()) { fn(field); } }
 
 private:
     /// @brief The hash and the name of this type.
