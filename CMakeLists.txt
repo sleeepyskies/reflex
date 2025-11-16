@@ -21,25 +21,25 @@ target_include_directories(
 option(REFLEX_INCLUDE_HEADERS "Include header files to target" ON)
 
 # make IDE friendly (except clion urgh)
-if(REFLEX_INCLUDE_HEADERS)
+if (REFLEX_INCLUDE_HEADERS)
     message(STATUS "Including header files in the target")
     set(
             REFLEX_HEADERS
 
-            src/reflex.hpp
+            include/reflex.hpp
 
-            src/context.hpp
-            src/exception.hpp
-            src/field.hpp
-            src/hash.hpp
-            src/reflector.hpp
-            src/serialize.hpp
-            src/traits.hpp
-            src/type_info.hpp
+            include/context.hpp
+            include/exception.hpp
+            include/field.hpp
+            include/hash.hpp
+            include/reflector.hpp
+            include/serialize.hpp
+            include/traits.hpp
+            include/type_info.hpp
     )
 
     target_sources(reflex INTERFACE ${REFLEX_HEADERS})
-endif()
+endif ()
 
 # todo: write tests
 # tests
@@ -48,12 +48,12 @@ if (REFLEX_ENABLE_TESTS)
     enable_testing()
     message(STATUS "Running reflex tests")
     add_subdirectory(test)
-endif()
+endif ()
 
 # examples
 option(REFLEX_BUILD_EXAMPLES "Build examples" ON)
 if (REFLEX_BUILD_EXAMPLES)
     message(STATUS "Building examples")
     add_subdirectory(example)
-endif()
+endif ()
 

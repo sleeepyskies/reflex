@@ -49,6 +49,7 @@ public:
      */
     template <typename Class>
     [[nodiscard]] auto get(Class& obj) const -> std::any { return m_get(static_cast<void*>(&obj)); }
+
     template <typename Class>
     [[nodiscard]] auto get(const Class& obj) const -> std::any { return m_get(static_cast<const void*>(&obj)); }
 
@@ -62,8 +63,12 @@ public:
      */
     template <typename T, typename Class>
     [[nodiscard]] auto get(Class& obj) const -> T { return std::any_cast<T>(m_get(static_cast<void*>(&obj))); }
+
     template <typename T, typename Class>
-    [[nodiscard]] auto get(const Class& obj) const -> T { return std::any_cast<T>(m_get(static_cast<const void*>(&obj))); }
+    [[nodiscard]] auto get(const Class& obj) const -> T
+    {
+        return std::any_cast<T>(m_get(static_cast<const void*>(&obj)));
+    }
 
     /**
      * @brief Returns the type hash for this field.
@@ -80,7 +85,7 @@ public:
      * @warning The caller must make sure that T matches the field's actual type.
      */
     template <typename Class, typename T>
-    void set(Class& obj, const T& value) const { m_set(static_cast<void*>(&obj), std::any{value}); }
+    void set(Class& obj, const T& value) const { m_set(static_cast<void*>(&obj), std::any{ value }); }
 
     /**
      * @brief Constructs a new member field object.
@@ -110,7 +115,7 @@ public:
         };
 
         if constexpr (std::is_const_v<T>) {
-            f.m_set = [] (void*, const std::any&) { throw const_field_error{ }; };
+            f.m_set = [] (void*, const std::any&) { throw reflection_error{ "Cannot set a const field." }; };
         } else {
             f.m_set = [memberPtr] (void* obj, const std::any& value) {
                 static_cast<Class*>(obj)->*memberPtr = std::any_cast<T>(value);
@@ -146,9 +151,7 @@ public:
         };
 
         if constexpr (std::is_const_v<T>) {
-            f.m_set = [] (void*, const std::any&) {
-                throw const_field_error{ };
-            };
+            f.m_set = [] (void*, const std::any&) { throw reflection_error{ "Cannot set a const field." }; };
         } else {
             f.m_set = [staticPtr] (void*, const std::any& value) {
                 *staticPtr = std::any_cast<T>(value);

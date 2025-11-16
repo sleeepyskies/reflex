@@ -74,6 +74,11 @@ public:
     constexpr bool operator>(const hash_base& other) const noexcept { return m_hash > other.m_hash; }
 
     /**
+     * @brief bool overload. Returns true if this hash holds a valid hash, false otherwise.
+     */
+    explicit constexpr operator bool() const noexcept { return m_hash != 0; }
+
+    /**
      * @brief Returns the computed 64-bit hash.
      * @return The hash value.
      */
@@ -101,8 +106,8 @@ private:
     {
         constexpr uint64_t offset = 14695981039346656037ull;
         // ReSharper disable once CppTooWideScope
-        constexpr uint64_t prime  = 1099511628211ull;
-        uint64_t hash             = offset;
+        constexpr uint64_t prime = 1099511628211ull;
+        uint64_t hash            = offset;
         for (const auto c : str) {
             hash ^= c;
             hash *= prime;
@@ -141,16 +146,21 @@ struct name_hash : internal::hash_base<name_hash>
 
 // todo: should create my own hashmap implementation, which would avoid needing this
 
-namespace std {
+namespace std
+{
 template <>
-struct hash<reflex::type_hash> {
-    size_t operator()(const reflex::type_hash& s) const noexcept {
+struct hash<reflex::type_hash>
+{
+    size_t operator()(const reflex::type_hash& s) const noexcept
+    {
         return s.value();
     }
 };
 template <>
-struct hash<reflex::name_hash> {
-    size_t operator()(const reflex::name_hash& s) const noexcept {
+struct hash<reflex::name_hash>
+{
+    size_t operator()(const reflex::name_hash& s) const noexcept
+    {
         return s.value();
     }
 };

@@ -42,7 +42,7 @@ struct alias
  * @return An instance of a reflector, used to sequentially capture a new type.
  */
 template <typename T>
-auto capture(context& ctx, const std::string_view type_name) -> reflector<T>
+auto capture(context& ctx, const std::string_view type_name) noexcept -> reflector<T>
 {
     return reflector<T>(ctx, internal::alias<T>{ type_name }.hash);
 }
@@ -54,7 +54,7 @@ auto capture(context& ctx, const std::string_view type_name) -> reflector<T>
  * @return An instance of a reflector, used to sequentially capture a new type.
  */
 template <typename T>
-auto capture(const std::string_view type_name) -> reflector<T>
+auto capture(const std::string_view type_name) noexcept -> reflector<T>
 {
     return reflector<T>(internal::global::ctx, internal::alias<T>{ type_name }.hash);
 }
@@ -62,45 +62,87 @@ auto capture(const std::string_view type_name) -> reflector<T>
 /**
  * @brief Looks up and returns the type_info associated with T.
  * @tparam T The type to lookup.
+ * @throws reflection_error if the type T has not been captured.
  * @return The type_info associated with T.
  */
 template <typename T>
 auto lookup() -> type_info
 {
-    return internal::global::ctx[internal::alias<T>::hash];
+    auto hash = internal::alias<T>::hash;
+    auto& ctx = internal::global::ctx;
+    if (internal::alias<T>::hash) {
+        throw reflection_error{ "Attempted to lookup type that has not been captured." };
+    }
+    auto it = ctx.find(internal::alias<T>::hash);
+    if (it == ctx.end()) {
+        throw reflection_error{ "Attempted to lookup type that has not been captured." };
+    }
+    return it->second;
 }
 
 /**
  * @brief Looks up and returns the type_info associated with T.
  * @tparam T The type to lookup.
  * @param ctx The context source.
+ * @throws reflection_error if the type T has not been captured.
  * @return The type_info associated with T from the context ctx.
  */
 template <typename T>
 auto lookup(const context& ctx) -> type_info
 {
-    return ctx[internal::alias<T>::hash];
+    auto hash = internal::alias<T>::hash;
+    if (!hash) {
+        throw reflection_error{ "Attempted to lookup type that has not been captured." };
+    }
+    auto it = ctx.find(hash);
+    if (it == ctx.end()) {
+        throw reflection_error{ "Attempted to lookup type that has not been captured." };
+    }
+    return it->second;
 }
 
 /**
  * @brief Looks up and returns the type_info associated with the name.
  * @param name The name to lookup.
+ * @throws reflection_error if the type has not been captured.
  * @return The type_info associated with the name.
  */
 inline auto lookup(const std::string_view name) -> const type_info&
 {
-    return internal::global::ctx.at(type_hash{ name });
+    auto& ctx     = internal::global::ctx;
+    const auto it = ctx.find(type_hash{ name });
+    if (it == ctx.end()) {
+        throw reflection_error{ "Attempted to lookup type that has not been captured." };
+    }
+    return it->second;
 }
 
 /**
  * @brief Looks up and returns the type_info associated with the name.
  * @param ctx The context source.
  * @param name The name to lookup.
+ * @throws reflection_error if the type has not been captured.
  * @return The type_info associated with the name.
  */
 inline auto lookup(const context& ctx, const std::string_view name) -> const type_info&
 {
-    return ctx.at(type_hash{ name });
+    const auto it = ctx.find(type_hash{ name });
+    if (it == ctx.end()) {
+        throw reflection_error{ "Attempted to lookup type that has not been captured." };
+    }
+    return it->second;
+}
+
+/**
+ * @brief Returns the captured name of the type T.
+ * @tparam T The type to get the name for.
+ * @throws reflection_error if the type has not been captured.
+ * @return The name of the type.
+ */
+template <typename T>
+auto name() -> std::string_view
+{
+    return lookup<T>().name();
 }
 
 } // namespace reflex
