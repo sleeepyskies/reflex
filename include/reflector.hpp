@@ -50,7 +50,7 @@ public:
      * @brief Captures a static field entry.
      * @tparam Ptr The static pointer to the field.
      * @param field_name The name of the field.
-     * @return A reference to the Reflector for use in a builder pattern.
+     * @return A reference to the reflector for use in a builder pattern.
      */
     template <auto Ptr>
         requires static_field_ptr<Ptr>
@@ -59,6 +59,18 @@ public:
         auto& ctx = *m_ctx;
         const name_hash name_hash{ field_name };
         ctx.at(m_type_hash).insert_field(name_hash, field::create_static(name_hash, m_type_hash, Ptr));
+        return *this;
+    }
+
+    /**
+     * @brief Captures a base class.
+     * @param base_class The base class name.
+     * @return A reference to the reflector for use in a builder pattern.
+     */
+    auto base(const std::string_view base_class) -> reflector&
+    {
+        auto& ctx = *m_ctx;
+        ctx.at(m_type_hash).set_base(type_hash{ base_class });
         return *this;
     }
 

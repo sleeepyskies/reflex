@@ -78,9 +78,23 @@ public:
      */
     void for_each_field(const std::function<void(field&)>& fn) { for (auto& field : fields()) { fn(field); } }
 
+    /**
+     * @brief Sets this type_infos base class.
+     * @param base The base class to set.
+     */
+    void set_base(const type_hash& base) noexcept { m_base = base; }
+
+    /**
+     * @brief Returns this type_info's base class hash.
+     * @return Base class hash.
+     */
+    [[nodiscard]] auto get_base() const noexcept -> type_hash { return m_base; }
+
 private:
     /// @brief The hash and the name of this type.
     type_hash m_hash;
+    /// @brief The hash and the name of this type's base class. The hash evaluates to false if not present.
+    type_hash m_base;
     /// @brief All fields captured in this type.
     std::unordered_map<name_hash, field> m_fields;
 };

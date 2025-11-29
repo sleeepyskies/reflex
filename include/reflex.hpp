@@ -70,7 +70,7 @@ auto lookup() -> type_info
 {
     auto hash = internal::alias<T>::hash;
     auto& ctx = internal::global::ctx;
-    if (internal::alias<T>::hash) {
+    if (!hash) {
         throw reflection_error{ "Attempted to lookup type that has not been captured." };
     }
     auto it = ctx.find(internal::alias<T>::hash);
@@ -145,4 +145,12 @@ auto name() -> std::string_view
     return lookup<T>().name();
 }
 
+inline auto derived_from(const std::string_view name) -> std::vector<type_info>
+{
+    auto& ctx = internal::global::ctx;
+    const type_hash base_hash{ name };
+    std::vector<type_info> types;
+    for (const auto& ti : ctx | std::ranges::views::values) { if (ti.get_base() == base_hash) types.push_back(ti); }
+    return types;
+}
 } // namespace reflex
