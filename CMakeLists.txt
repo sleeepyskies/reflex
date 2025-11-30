@@ -14,7 +14,7 @@ add_library(reflex INTERFACE)
 target_include_directories(
         reflex
         INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -31,7 +31,7 @@ if (REFLEX_INCLUDE_HEADERS)
             include/context.hpp
             include/exception.hpp
             include/field.hpp
-            include/hash.hpp
+            include/hashed_string.hpp
             include/reflector.hpp
             include/serialize.hpp
             include/traits.hpp
