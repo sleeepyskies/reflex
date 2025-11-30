@@ -7,7 +7,7 @@
 #include "context.hpp"
 #include "exception.hpp"
 #include "field.hpp"
-#include "hash.hpp"
+#include "hashed_string.hpp"
 #include "reflector.hpp"
 #include "serialize.hpp"
 #include "traits.hpp"
@@ -143,14 +143,5 @@ template <typename T>
 auto name() -> std::string_view
 {
     return lookup<T>().name();
-}
-
-inline auto derived_from(const std::string_view name) -> std::vector<type_info>
-{
-    auto& ctx = internal::global::ctx;
-    const type_hash base_hash{ name };
-    std::vector<type_info> types;
-    for (const auto& ti : ctx | std::ranges::views::values) { if (ti.get_base() == base_hash) types.push_back(ti); }
-    return types;
 }
 } // namespace reflex

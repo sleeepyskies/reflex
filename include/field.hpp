@@ -3,7 +3,7 @@
 #include <functional>
 #include <any>
 
-#include "hash.hpp"
+#include "hashed_string.hpp"
 #include "exception.hpp"
 
 
@@ -26,7 +26,7 @@ public:
      * @brief Returns the name of the field.
      * @return The name of the field.
      */
-    [[nodiscard]] auto name() const noexcept -> std::string_view { return m_name_hash.name(); }
+    [[nodiscard]] auto name() const noexcept -> std::string_view { return m_name_hash.data(); }
 
     /**
      * @brief Checks whether this field is static.
