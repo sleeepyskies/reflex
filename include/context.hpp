@@ -9,7 +9,7 @@ namespace reflex
 {
 
 /// @brief A Storage container for reflected types.
-using context = std::unordered_map<type_hash, type_info>;
+using context = std::unordered_map<hashed_string, type_info>;
 
 
 namespace internal
