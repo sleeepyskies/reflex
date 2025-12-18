@@ -9,7 +9,9 @@ project(
 )
 include(GNUInstallDirs)
 
-add_library(reflex INTERFACE)
+add_library(reflex INTERFACE
+        include/capture.hpp
+        include/alias.hpp)
 
 target_include_directories(
         reflex
@@ -29,13 +31,12 @@ if (REFLEX_INCLUDE_HEADERS)
             include/reflex.hpp
 
             include/context.hpp
+            include/descriptor.hpp
             include/exception.hpp
-            include/field.hpp
+            include/handle.hpp
             include/hashed_string.hpp
-            include/reflector.hpp
-            include/serialize.hpp
+            include/range.hpp
             include/traits.hpp
-            include/type_info.hpp
     )
 
     target_sources(reflex INTERFACE ${REFLEX_HEADERS})

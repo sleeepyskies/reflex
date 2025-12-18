@@ -5,7 +5,6 @@
 
 namespace reflex
 {
-
 namespace internal
 {
 // Magic numbers used for 64-bit FNV-1a hashing.
@@ -36,12 +35,30 @@ public:
         }
     }
 
+    constexpr explicit hashed_string() : m_hash(0), m_name(nullptr), m_length(0) { }
+
     /**
-     * @brief Three-way comparison between two hashed_string's. Auto generates all other comparison operators.
+     * @brief Three-way comparison between two hashed_string's.
      */
     [[nodiscard]] constexpr auto operator<=>(const hashed_string& other) const noexcept
     {
         return m_hash <=> other.m_hash;
+    }
+
+    /**
+     * @brief Equality comparison.
+     */
+    [[nodiscard]] constexpr auto operator==(const hashed_string& other) const noexcept -> bool
+    {
+        return m_hash == other.m_hash;
+    }
+
+    /**
+     * @brief Inequality comparison.
+     */
+    [[nodiscard]] constexpr auto operator!=(const hashed_string& other) const noexcept -> bool
+    {
+        return !(*this == other);
     }
 
     /**
@@ -67,7 +84,6 @@ private:
     /// @brief The length of the original string.
     size_t m_length;
 };
-
 } // namespace reflex
 
 /**

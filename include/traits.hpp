@@ -26,4 +26,14 @@ concept field_ptr = member_field_ptr<Ptr> || static_field_ptr<Ptr>;
 template <typename T>
 using stripped_type = std::remove_cvref_t<std::remove_pointer_t<T>>;
 
+template <typename T>
+struct member_info;
+
+template <typename C, typename T>
+struct member_info<T C::*>
+{
+    using field_type = T;
+    using class_type = C;
+};
+
 } // namespace reflex

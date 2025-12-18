@@ -1,37 +1,20 @@
 /**
  * @file reflex.hpp
- * @brief Single include header to ease of use.
+ * @brief Single include header to ease of use, also holds the main user API.
  */
 #pragma once
 
 #include "context.hpp"
 #include "exception.hpp"
-#include "field.hpp"
 #include "hashed_string.hpp"
-#include "reflector.hpp"
-#include "serialize.hpp"
-#include "traits.hpp"
-#include "type_info.hpp"
+#include "handle.hpp"
+#include "range.hpp"
+#include "alias.hpp"
+#include "capture.hpp"
 
 
 namespace reflex
 {
-
-namespace internal
-{
-
-template <typename T>
-struct alias
-{
-    explicit alias(const std::string_view str) { hash = type_hash{ str }; }
-
-    /// @brief A per-type cached hash value. Constructing an alias with a
-    /// string will initialize the static hash for that type so later lookups
-    /// can reference it without supplying the name again.
-    static inline type_hash hash;
-};
-
-} // namespace internal
 
 
 /**
@@ -42,9 +25,9 @@ struct alias
  * @return An instance of a reflector, used to sequentially capture a new type.
  */
 template <typename T>
-auto capture(context& ctx, const std::string_view type_name) noexcept -> reflector<T>
+auto capture(context& ctx, const char* type_name) noexcept -> reflector<T>
 {
-    return reflector<T>(ctx, internal::alias<T>{ type_name }.hash);
+    return reflector<T>(&ctx, internal::alias<T>{ type_name }.hash);
 }
 
 /**
@@ -54,51 +37,51 @@ auto capture(context& ctx, const std::string_view type_name) noexcept -> reflect
  * @return An instance of a reflector, used to sequentially capture a new type.
  */
 template <typename T>
-auto capture(const std::string_view type_name) noexcept -> reflector<T>
+auto capture(const char* type_name) noexcept -> reflector<T>
 {
-    return reflector<T>(internal::global::ctx, internal::alias<T>{ type_name }.hash);
+    return reflector<T>(&internal::global::ctx, internal::alias<T>{ type_name }.hash);
 }
 
 /**
- * @brief Looks up and returns the type_info associated with T.
+ * @brief Looks up and returns the type_handle associated with T.
  * @tparam T The type to lookup.
  * @throws reflection_error if the type T has not been captured.
  * @return The type_info associated with T.
  */
 template <typename T>
-auto lookup() -> type_info
+auto lookup() -> type_handle
 {
     auto hash = internal::alias<T>::hash;
-    auto& ctx = internal::global::ctx;
     if (!hash) {
-        throw reflection_error{ "Attempted to lookup type that has not been captured." };
+        throw reflection_error{ "Hash does not exist for this type." };
     }
-    auto it = ctx.find(internal::alias<T>::hash);
+    auto& ctx = internal::global::ctx;
+    auto it   = ctx.find(internal::alias<T>::hash);
     if (it == ctx.end()) {
         throw reflection_error{ "Attempted to lookup type that has not been captured." };
     }
-    return it->second;
+    return type_handle{ &ctx, &it->second };
 }
 
 /**
- * @brief Looks up and returns the type_info associated with T.
+ * @brief Looks up and returns the type_handle associated with T.
  * @tparam T The type to lookup.
  * @param ctx The context source.
  * @throws reflection_error if the type T has not been captured.
  * @return The type_info associated with T from the context ctx.
  */
 template <typename T>
-auto lookup(const context& ctx) -> type_info
+auto lookup(const context& ctx) -> type_handle
 {
     auto hash = internal::alias<T>::hash;
     if (!hash) {
-        throw reflection_error{ "Attempted to lookup type that has not been captured." };
+        throw reflection_error{ "Hash does not exist for this type." };
     }
     auto it = ctx.find(hash);
     if (it == ctx.end()) {
         throw reflection_error{ "Attempted to lookup type that has not been captured." };
     }
-    return it->second;
+    return type_handle{ &ctx, &it->second };
 }
 
 /**
@@ -107,14 +90,14 @@ auto lookup(const context& ctx) -> type_info
  * @throws reflection_error if the type has not been captured.
  * @return The type_info associated with the name.
  */
-inline auto lookup(const std::string_view name) -> const type_info&
+inline auto lookup(const char* name) -> type_handle
 {
     auto& ctx     = internal::global::ctx;
-    const auto it = ctx.find(type_hash{ name });
+    const auto it = ctx.find(hashed_string{ name });
     if (it == ctx.end()) {
         throw reflection_error{ "Attempted to lookup type that has not been captured." };
     }
-    return it->second;
+    return type_handle{ &ctx, &it->second };
 }
 
 /**
@@ -124,13 +107,13 @@ inline auto lookup(const std::string_view name) -> const type_info&
  * @throws reflection_error if the type has not been captured.
  * @return The type_info associated with the name.
  */
-inline auto lookup(const context& ctx, const std::string_view name) -> const type_info&
+inline auto lookup(context& ctx, const char* name) -> type_handle
 {
-    const auto it = ctx.find(type_hash{ name });
+    const auto it = ctx.find(hashed_string{ name });
     if (it == ctx.end()) {
         throw reflection_error{ "Attempted to lookup type that has not been captured." };
     }
-    return it->second;
+    return type_handle{ &ctx, &it->second };
 }
 
 /**
@@ -140,8 +123,6 @@ inline auto lookup(const context& ctx, const std::string_view name) -> const typ
  * @return The name of the type.
  */
 template <typename T>
-auto name() -> std::string_view
-{
-    return lookup<T>().name();
-}
+auto name() -> const char* { return lookup<T>().name(); }
+
 } // namespace reflex

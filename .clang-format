@@ -2,6 +2,8 @@
 ---
 Language: Cpp
 BasedOnStyle: LLVM
+AllowShortIfStatementsOnASingleLine: Always
+AllowShortFunctionsOnASingleLine: All
 AccessModifierOffset: -4
 AlignAfterOpenBracket: AlwaysBreak
 AlignConsecutiveAssignments: true
@@ -13,7 +15,7 @@ AlwaysBreakAfterDefinitionReturnType: false
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
-BraceWrapping: 
+BraceWrapping:
   AfterCaseLabel: false
   AfterClass: true
   AfterControlStatement: false
@@ -37,7 +39,8 @@ ColumnLimit: 120
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ContinuationIndentWidth: 8
 Cpp11BracedListStyle: false
-IncludeCategories: 
+FixNamespaceComments: true
+IncludeCategories:
   - Regex: '^<.*'
     Priority: 1
   - Regex: '^".*'
@@ -48,6 +51,8 @@ IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentCaseLabels: true
 IndentWidth: 4
 InsertNewlineAtEOF: true
+MaxEmptyLinesToKeep: 1
+SeparateDefinitionBlocks: Leave
 MacroBlockBegin: ''
 MacroBlockEnd: ''
 PointerAlignment: Left

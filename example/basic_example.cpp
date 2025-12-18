@@ -2,8 +2,6 @@
 #include <iostream>
 #include <ranges>
 
-static reflex::context s_component_ctx;
-
 struct component { };
 
 struct pos_component : component
@@ -18,31 +16,37 @@ struct tag_component : component
     std::string tag;
 };
 
+enum widget_type
+{
+    SLIDER,
+    INPUT,
+    SOMETHING
+};
+
 /// basic yaml output of a struct
 int main(int argc, char* argv[])
 {
-    reflex::capture<pos_component>(s_component_ctx, "pos_component")
-            .base("component")
+    reflex::capture<pos_component>("pos_component")
             .field<&pos_component::x>("x")
+                .decorate("min", 1.f)
+                .decorate("max", 100.f)
+                .decorate("widget", SLIDER)
             .field<&pos_component::y>("y")
-            .field<&pos_component::z>("z");
+                .decorate("min", 1.f)
+                .decorate("max", 100.f)
+                .decorate("widget", SLIDER)
+            .field<&pos_component::z>("z")
+                .decorate("min", 1.f)
+                .decorate("max", 100.f)
+                .decorate("widget", SLIDER);
 
     pos_component pos{ 1, 2, 3 };
 
-    std::cout << "hash: " << reflex::lookup(s_component_ctx, "pos_component").get_hash().value() << std::endl;
-    std::cout << "name: " << reflex::lookup(s_component_ctx, "pos_component").name() << std::endl;
+    std::cout << "name: " << reflex::lookup("pos_component").name() << std::endl;
 
-    for (const auto& field : reflex::lookup(s_component_ctx, "pos_component").fields()) {
-        std::cout << "\t" << field.name() << ": " << field.get(pos) << std::endl;
-    }
-
-
-    for (const auto& field_info : s_component_ctx | std::views::values) {
-        if (scene.has<T>(entity)) {
-            // draw divider, write title of component to gui etc
-            for (const auto& field: field_info.fields()) {
-                // somehow draw sliders/inputs for each field, also with given bounds
-            }
-        }
+    for (const auto& field : reflex::lookup("pos_component").fields()) {
+        std::cout << "\t" << field.name() << ": " << field.name() << std::endl;
+        std::cout << "\t\t" << "min" << ": " << std::any_cast<float>(field.attribute("min")) << std::endl;
+        std::cout << "\t\t" << "max" << ": " << std::any_cast<float>(field.attribute("max")) << std::endl;
     }
 }
