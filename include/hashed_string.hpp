@@ -76,6 +76,8 @@ public:
      */
     [[nodiscard]] constexpr auto length() const noexcept -> size_t { return m_length; }
 
+    [[nodiscard]] explicit operator bool() const noexcept { return m_hash != 0; }
+
 private:
     /// @brief The computed hash.
     uint64_t m_hash;
